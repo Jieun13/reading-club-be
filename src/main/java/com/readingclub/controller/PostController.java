@@ -44,7 +44,7 @@ public class PostController {
                 .size(size)
                 .build();
             
-            PostDto.ListResponse response = postService.getPosts(filter);
+            PostDto.ListResponse response = postService.getPosts(filter, userId);
             
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception e) {
