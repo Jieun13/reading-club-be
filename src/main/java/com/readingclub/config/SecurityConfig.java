@@ -41,11 +41,15 @@ public class SecurityConfig {
                 // 세션 사용하지 않음 (JWT 사용)
                 .sessionManagement(session -> 
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                
+
                 // 요청 권한 설정
                 .authorizeHttpRequests(auth -> auth
                         // 인증 없이 접근 가능한 경로
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/books/search").permitAll()
+                        // 게시글 공개 API
+                        .requestMatchers("/api/posts").permitAll()
+                        .requestMatchers("/api/posts/***").permitAll()
                         // 정적 리소스
                         .requestMatchers("/", "/static/**", "/public/**").permitAll()
                         // 나머지 모든 요청은 인증 필요
