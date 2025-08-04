@@ -31,9 +31,11 @@ public class PostController {
     public ResponseEntity<ApiResponse<PostDto.ListResponse>> getPosts(
             @RequestParam(required = false) PostType postType,
             @RequestParam(required = false) PostVisibility visibility,
-            @RequestParam(required = false) Long userId,
+            Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
+
+        Long userId = Long.parseLong(authentication.getName());
         
         try {
             PostDto.SearchFilter filter = PostDto.SearchFilter.builder()

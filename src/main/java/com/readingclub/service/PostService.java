@@ -36,8 +36,11 @@ public class PostService {
     public PostDto.ListResponse getPosts(PostDto.SearchFilter filter, Long userId) {
         Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize());
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
         Page<Post> postPage = postRepository.findPostsWithFilters(
-                filter.getPostType(), filter.getVisibility(), userId, pageable);
+                filter.getPostType(), filter.getVisibility(), user.getId(), pageable);
         
         List<PostDto.Response> posts = postPage.getContent().stream()
             .map(this::convertToResponse)
