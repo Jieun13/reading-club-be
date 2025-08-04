@@ -33,15 +33,11 @@ public class PostService {
     /**
      * 게시글 목록 조회 (필터링 및 페이징)
      */
-    public PostDto.ListResponse getPosts(PostDto.SearchFilter filter) {
+    public PostDto.ListResponse getPosts(PostDto.SearchFilter filter, Long userId) {
         Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize());
-        
+
         Page<Post> postPage = postRepository.findPostsWithFilters(
-            filter.getPostType(),
-            filter.getVisibility(),
-            filter.getUserId(),
-            pageable
-        );
+                filter.getPostType(), filter.getVisibility(), userId, pageable);
         
         List<PostDto.Response> posts = postPage.getContent().stream()
             .map(this::convertToResponse)
