@@ -6,13 +6,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.domain.Page;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class BookDto {
+public class CurrentlyReadingDto {
     
     @Data
     @Builder
@@ -23,11 +22,18 @@ public class BookDto {
         private String title;
         private String author;
         private String coverImage;
-        private Integer rating;
-        private String review;
+        private String publisher;
+        private String publishedDate;
+        private String description;
+        private ReadingType readingType;
+        private String readingTypeDisplay;
         
         @JsonFormat(pattern = "yyyy-MM-dd")
-        private LocalDate finishedDate;
+        private LocalDate dueDate;
+        
+        private Integer progressPercentage;
+        private String memo;
+        private boolean isOverdue;
         
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
         private LocalDateTime createdAt;
@@ -53,16 +59,25 @@ public class BookDto {
         @Size(max = 500, message = "표지 이미지 URL은 500자 이하여야 합니다")
         private String coverImage;
         
-        @NotNull(message = "별점은 필수입니다")
-        @Min(value = 1, message = "별점은 1점 이상이어야 합니다")
-        @Max(value = 5, message = "별점은 5점 이하여야 합니다")
-        private Integer rating;
+        @Size(max = 100, message = "출판사명은 100자 이하여야 합니다")
+        private String publisher;
         
-        private String review;
+        @Size(max = 20, message = "출판일은 20자 이하여야 합니다")
+        private String publishedDate;
         
-        @NotNull(message = "완독일은 필수입니다")
+        private String description;
+        
+        @NotNull(message = "읽기 형태는 필수입니다")
+        private ReadingType readingType;
+        
         @JsonFormat(pattern = "yyyy-MM-dd")
-        private LocalDate finishedDate;
+        private LocalDate dueDate; // 도서관 대여 종료일
+        
+        @Min(value = 0, message = "진행률은 0 이상이어야 합니다")
+        @Max(value = 100, message = "진행률은 100 이하여야 합니다")
+        private Integer progressPercentage = 0;
+        
+        private String memo;
     }
     
     @Data
@@ -80,43 +95,37 @@ public class BookDto {
         @Size(max = 500, message = "표지 이미지 URL은 500자 이하여야 합니다")
         private String coverImage;
         
-        @NotNull(message = "별점은 필수입니다")
-        @Min(value = 1, message = "별점은 1점 이상이어야 합니다")
-        @Max(value = 5, message = "별점은 5점 이하여야 합니다")
-        private Integer rating;
-        
-        private String review;
-        
-        @NotNull(message = "완독일은 필수입니다")
-        @JsonFormat(pattern = "yyyy-MM-dd")
-        private LocalDate finishedDate;
-    }
-    
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class SearchResult {
-        private String title;
-        private String author;
+        @Size(max = 100, message = "출판사명은 100자 이하여야 합니다")
         private String publisher;
-        private String pubDate;
+        
+        @Size(max = 20, message = "출판일은 20자 이하여야 합니다")
+        private String publishedDate;
+        
         private String description;
-        private String cover;
-        private String isbn;
-        private String categoryName;
-        private Integer priceStandard;
+        
+        @NotNull(message = "읽기 형태는 필수입니다")
+        private ReadingType readingType;
+        
+        @JsonFormat(pattern = "yyyy-MM-dd")
+        private LocalDate dueDate;
+        
+        @Min(value = 0, message = "진행률은 0 이상이어야 합니다")
+        @Max(value = 100, message = "진행률은 100 이하여야 합니다")
+        private Integer progressPercentage;
+        
+        private String memo;
     }
     
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class MonthlyStats {
-        private int year;
-        private int month;
-        private long count;
-        private double averageRating;
+    public static class ProgressUpdateRequest {
+        @Min(value = 0, message = "진행률은 0 이상이어야 합니다")
+        @Max(value = 100, message = "진행률은 100 이하여야 합니다")
+        private Integer progressPercentage;
+        
+        private String memo;
     }
     
     @Data
@@ -124,7 +133,7 @@ public class BookDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class DuplicateCheckResponse {
-        private boolean duplicate; // isDuplicate -> duplicate로 수정
+        private boolean duplicate;
         private List<DuplicateBook> duplicateBooks;
         
         @Data
@@ -135,23 +144,28 @@ public class BookDto {
             private Long id;
             private String title;
             private String author;
-            private Integer rating;
-            
-            @JsonFormat(pattern = "yyyy-MM-dd")
-            private LocalDate finishedDate;
+            private ReadingType readingType;
+            private Integer progressPercentage;
             
             @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
             private LocalDateTime createdAt;
         }
     }
     
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class CombinedBookResponse {
-        private Page<Response> books;
-        private List<CurrentlyReadingDto.Response> currentlyReading;
-        private int totalCurrentlyReading;
+    public enum ReadingType {
+        PAPER_BOOK("종이책 소장"),
+        LIBRARY_RENTAL("도서관 대여"),
+        MILLIE("밀리의 서재"),
+        E_BOOK("전자책 소장");
+        
+        private final String displayName;
+        
+        ReadingType(String displayName) {
+            this.displayName = displayName;
+        }
+        
+        public String getDisplayName() {
+            return displayName;
+        }
     }
-}
+} 

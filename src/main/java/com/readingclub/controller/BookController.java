@@ -51,6 +51,30 @@ public class BookController {
     }
     
     /**
+     * 내 책 목록 조회 (완독한 책 + 읽고 있는 책)
+     */
+    @GetMapping("/with-currently-reading")
+    public ResponseEntity<ApiResponse<BookDto.CombinedBookResponse>> getMyBooksWithCurrentlyReading(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer rating,
+            @RequestParam(required = false) String search) {
+        try {
+            Long userId = getCurrentUserId();
+            Pageable pageable = PageRequest.of(page, size);
+            
+            BookDto.CombinedBookResponse response = bookService.getUserBooksWithCurrentlyReading(userId, pageable, year, month, rating, search);
+            return ResponseEntity.ok(ApiResponse.success(response, "책 목록 조회 성공"));
+        } catch (Exception e) {
+            log.error("책 목록 조회 실패", e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("책 목록 조회에 실패했습니다."));
+        }
+    }
+    
+    /**
      * 책 상세 조회
      */
     @GetMapping("/{bookId}")

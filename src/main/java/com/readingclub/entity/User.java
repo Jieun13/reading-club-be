@@ -51,6 +51,10 @@ public class User {
     @Builder.Default
     private List<RefreshToken> refreshTokens = new ArrayList<>();
     
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<CurrentlyReading> currentlyReading = new ArrayList<>();
+    
     // 편의 메서드
     public void addBook(Book book) {
         books.add(book);
@@ -60,5 +64,15 @@ public class User {
     public void removeBook(Book book) {
         books.remove(book);
         book.setUser(null);
+    }
+    
+    public void addCurrentlyReading(CurrentlyReading currentlyReading) {
+        this.currentlyReading.add(currentlyReading);
+        currentlyReading.setUser(this);
+    }
+    
+    public void removeCurrentlyReading(CurrentlyReading currentlyReading) {
+        this.currentlyReading.remove(currentlyReading);
+        currentlyReading.setUser(null);
     }
 }

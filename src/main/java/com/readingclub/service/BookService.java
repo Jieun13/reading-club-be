@@ -1,10 +1,13 @@
 package com.readingclub.service;
 
 import com.readingclub.dto.BookDto;
+import com.readingclub.dto.CurrentlyReadingDto;
 import com.readingclub.dto.UserDto;
 import com.readingclub.entity.Book;
+import com.readingclub.entity.CurrentlyReading;
 import com.readingclub.entity.User;
 import com.readingclub.repository.BookRepository;
+import com.readingclub.repository.CurrentlyReadingRepository;
 import com.readingclub.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +26,7 @@ import java.util.stream.Collectors;
 public class BookService {
     
     private final BookRepository bookRepository;
+    private final CurrentlyReadingRepository currentlyReadingRepository;
     private final UserRepository userRepository;
     
     /**
@@ -39,6 +43,33 @@ public class BookService {
         Page<Book> books = bookRepository.findByUserIdOrderByFinishedDateDesc(userId, pageable);
         
         return books.map(this::convertToDto);
+    }
+    
+    /**
+     * 사용자별 책 목록 조회 (완독한 책 + 읽고 있는 책)
+     */
+    public BookDto.CombinedBookResponse getUserBooksWithCurrentlyReading(Long userId, Pageable pageable, 
+                                                                       Integer year, Integer month, Integer rating, String search) {
+        // 사용자 존재 확인
+        if (!userRepository.existsById(userId)) {
+            throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
+        }
+        
+        // 완독한 책 조회
+        Page<Book> books = bookRepository.findByUserIdOrderByFinishedDateDesc(userId, pageable);
+        Page<BookDto.Response> bookResponses = books.map(this::convertToDto);
+        
+        // 읽고 있는 책 조회 (페이징 없이 전체)
+        List<CurrentlyReading> currentlyReading = currentlyReadingRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        List<CurrentlyReadingDto.Response> currentlyReadingResponses = currentlyReading.stream()
+                .map(this::convertCurrentlyReadingToDto)
+                .collect(Collectors.toList());
+        
+        return BookDto.CombinedBookResponse.builder()
+                .books(bookResponses)
+                .currentlyReading(currentlyReadingResponses)
+                .totalCurrentlyReading(currentlyReadingResponses.size())
+                .build();
     }
     
     /**
@@ -189,6 +220,39 @@ public class BookService {
                 .finishedDate(book.getFinishedDate())
                 .createdAt(book.getCreatedAt())
                 .updatedAt(book.getUpdatedAt())
+                .user(userDto)
+                .build();
+    }
+    
+    /**
+     * CurrentlyReading Entity를 DTO로 변환
+     */
+    private CurrentlyReadingDto.Response convertCurrentlyReadingToDto(CurrentlyReading currentlyReading) {
+        UserDto.Response userDto = UserDto.Response.builder()
+                .id(currentlyReading.getUser().getId())
+                .kakaoId(currentlyReading.getUser().getKakaoId())
+                .nickname(currentlyReading.getUser().getNickname())
+                .profileImage(currentlyReading.getUser().getProfileImage())
+                .createdAt(currentlyReading.getUser().getCreatedAt())
+                .updatedAt(currentlyReading.getUser().getUpdatedAt())
+                .build();
+        
+        return CurrentlyReadingDto.Response.builder()
+                .id(currentlyReading.getId())
+                .title(currentlyReading.getTitle())
+                .author(currentlyReading.getAuthor())
+                .coverImage(currentlyReading.getCoverImage())
+                .publisher(currentlyReading.getPublisher())
+                .publishedDate(currentlyReading.getPublishedDate())
+                .description(currentlyReading.getDescription())
+                .readingType(CurrentlyReadingDto.ReadingType.valueOf(currentlyReading.getReadingType().name()))
+                .readingTypeDisplay(currentlyReading.getReadingType().getDisplayName())
+                .dueDate(currentlyReading.getDueDate())
+                .progressPercentage(currentlyReading.getProgressPercentage())
+                .memo(currentlyReading.getMemo())
+                .isOverdue(currentlyReading.isOverdue())
+                .createdAt(currentlyReading.getCreatedAt())
+                .updatedAt(currentlyReading.getUpdatedAt())
                 .user(userDto)
                 .build();
     }
