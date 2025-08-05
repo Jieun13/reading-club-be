@@ -155,7 +155,10 @@ public class AuthService {
      */
     private String getKakaoAccessToken(String code) {
         String tokenUrl = "https://kauth.kakao.com/oauth/token";
-        
+
+        log.info("카카오 토큰 요청 시작 - URL: {}, code: {}", tokenUrl, code);
+        log.info("client_id: {}, redirect_uri: {}", kakaoClientId, kakaoRedirectUri);
+
         AuthDto.KakaoTokenResponse response = webClient.post()
                 .uri(tokenUrl)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
@@ -166,12 +169,14 @@ public class AuthService {
                         .with("code", code))
                 .retrieve()
                 .bodyToMono(AuthDto.KakaoTokenResponse.class)
+                .doOnError(error -> log.error("카카오 토큰 요청 중 에러 발생", error))
                 .block();
-        
+
         if (response == null || response.getAccess_token() == null) {
+            log.error("카카오 액세스 토큰 획득 실패 - 응답이 null이거나 access_token 없음");
             throw new RuntimeException("카카오 액세스 토큰 획득에 실패했습니다.");
         }
-        
+
         return response.getAccess_token();
     }
     
