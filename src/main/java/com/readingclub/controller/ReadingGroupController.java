@@ -199,12 +199,12 @@ public class ReadingGroupController {
      */
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || 
-            "anonymousUser".equals(authentication.getPrincipal())) {
-            // 개발 테스트용: 임시 사용자 ID 반환
-            log.warn("인증되지 않은 사용자 - 테스트용 사용자 ID(1) 반환");
-            return 1L;
+        if (authentication == null || !authentication.isAuthenticated() ||
+                authentication.getPrincipal() == null ||
+                authentication.getPrincipal() instanceof String && "anonymousUser".equals(authentication.getPrincipal())) {
+            throw new RuntimeException("인증되지 않은 사용자입니다.");
         }
+        // principal이 Long 타입임을 확신할 수 있으므로 캐스팅
         return (Long) authentication.getPrincipal();
     }
 }
