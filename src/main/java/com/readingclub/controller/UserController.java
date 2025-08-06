@@ -2,6 +2,7 @@ package com.readingclub.controller;
 
 import com.readingclub.dto.ApiResponse;
 import com.readingclub.dto.UserDto;
+import com.readingclub.dto.UserProfileDto;
 import com.readingclub.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,6 +65,21 @@ public class UserController {
             log.error("독서 통계 조회 실패", e);
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("독서 통계 조회에 실패했습니다."));
+        }
+    }
+    
+    /**
+     * 타사용자 프로필 조회
+     */
+    @GetMapping("/{userId}")
+    public ResponseEntity<ApiResponse<UserProfileDto.Response>> getUserProfile(@PathVariable Long userId) {
+        try {
+            UserProfileDto.Response profile = userService.getUserProfile(userId);
+            return ResponseEntity.ok(ApiResponse.success(profile, "사용자 프로필 조회 성공"));
+        } catch (Exception e) {
+            log.error("사용자 프로필 조회 실패: userId={}", userId, e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("사용자 프로필 조회에 실패했습니다: " + e.getMessage()));
         }
     }
     

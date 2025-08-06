@@ -25,10 +25,10 @@ public class PostController {
     private final PostService postService;
     
     /**
-     * 게시글 목록 조회 (필터링 및 페이징)
+     * 내 게시글 목록 조회 (필터링 및 페이징)
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<PostDto.ListResponse>> getPosts(
+    public ResponseEntity<ApiResponse<PostDto.ListResponse>> getMyPostsWithFilters(
             @RequestParam(required = false) PostType postType,
             @RequestParam(required = false) PostVisibility visibility,
             Authentication authentication,
@@ -50,9 +50,9 @@ public class PostController {
             
             return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception e) {
-            log.error("게시글 목록 조회 실패", e);
+            log.error("내 게시글 목록 조회 실패", e);
             return ResponseEntity.badRequest()
-                .body(ApiResponse.error("게시글 목록 조회에 실패했습니다: " + e.getMessage()));
+                .body(ApiResponse.error("내 게시글 목록 조회에 실패했습니다: " + e.getMessage()));
         }
     }
     
@@ -84,6 +84,62 @@ public class PostController {
             log.error("내 게시글 목록 조회 실패", e);
             return ResponseEntity.badRequest()
                 .body(ApiResponse.error("내 게시글 목록 조회에 실패했습니다: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * 공개 게시글 목록 조회 (모든 사용자의 공개 게시글)
+     */
+    @GetMapping("/public")
+    public ResponseEntity<ApiResponse<PostDto.ListResponse>> getPublicPosts(
+            @RequestParam(required = false) PostType postType,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        try {
+            PostDto.SearchFilter filter = PostDto.SearchFilter.builder()
+                .postType(postType)
+                .visibility(PostVisibility.PUBLIC)
+                .page(page)
+                .size(size)
+                .build();
+            
+            PostDto.ListResponse response = postService.getPublicPosts(filter);
+            
+            return ResponseEntity.ok(ApiResponse.success(response));
+        } catch (Exception e) {
+            log.error("공개 게시글 목록 조회 실패", e);
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("공개 게시글 목록 조회에 실패했습니다: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * 통합 게시글 목록 조회 (다른 사람들의 공개 게시글 + 나의 모든 게시글)
+     */
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<PostDto.ListResponse>> getAllPosts(
+            Authentication authentication,
+            @RequestParam(required = false) PostType postType,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        try {
+            Long userId = Long.parseLong(authentication.getName());
+            
+            PostDto.SearchFilter filter = PostDto.SearchFilter.builder()
+                .postType(postType)
+                .page(page)
+                .size(size)
+                .build();
+            
+            PostDto.ListResponse response = postService.getAllPosts(userId, filter);
+            
+            return ResponseEntity.ok(ApiResponse.success(response));
+        } catch (Exception e) {
+            log.error("통합 게시글 목록 조회 실패", e);
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("통합 게시글 목록 조회에 실패했습니다: " + e.getMessage()));
         }
     }
     
@@ -178,7 +234,7 @@ public class PostController {
         }
     }
     
-    /**
+        /**
      * 게시글 검색 (책 제목 기준)
      */
     @GetMapping("/search")
@@ -195,7 +251,33 @@ public class PostController {
         } catch (Exception e) {
             log.error("게시글 검색 실패: bookTitle={}, keyword={}, postType={}", bookTitle, keyword, postType, e);
             return ResponseEntity.badRequest()
-                .body(ApiResponse.error("게시글 검색에 실패했습니다: " + e.getMessage()));
+                    .body(ApiResponse.error("게시글 검색에 실패했습니다: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * 특정 사용자의 공개 게시글 조회
+     */
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<ApiResponse<PostDto.ListResponse>> getUserPosts(
+            @PathVariable Long userId,
+            @RequestParam(required = false) PostType postType,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            PostDto.SearchFilter filter = PostDto.SearchFilter.builder()
+                .postType(postType)
+                .visibility(PostVisibility.PUBLIC)
+                .page(page)
+                .size(size)
+                .build();
+            
+            PostDto.ListResponse response = postService.getUserPublicPosts(userId, filter);
+            return ResponseEntity.ok(ApiResponse.success(response, "사용자 게시글 조회 성공"));
+        } catch (Exception e) {
+            log.error("사용자 게시글 조회 실패: userId={}", userId, e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("사용자 게시글 조회에 실패했습니다: " + e.getMessage()));
         }
     }
 }

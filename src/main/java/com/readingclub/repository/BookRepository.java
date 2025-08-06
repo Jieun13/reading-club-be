@@ -44,6 +44,11 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     List<Book> findByUserIdAndFinishedDateBetween(@Param("userId") Long userId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
     
     /**
+     * 사용자별 특정 기간 완독한 책 개수 조회
+     */
+    long countByUserIdAndFinishedDateBetween(Long userId, LocalDate startDate, LocalDate endDate);
+    
+    /**
      * 사용자별 별점별 책 목록 조회
      */
     List<Book> findByUserIdAndRatingOrderByFinishedDateDesc(Long userId, Integer rating);
