@@ -94,6 +94,96 @@ public class PostService {
     }
     
     /**
+     * 공개 게시글 목록 조회 (모든 사용자의 공개 게시글)
+     */
+    public PostDto.ListResponse getPublicPosts(PostDto.SearchFilter filter) {
+        Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize());
+        Page<Post> postPage;
+        
+        if (filter.getPostType() != null) {
+            // 타입별 공개 게시글 조회
+            postPage = postRepository.findByPostTypeAndVisibilityOrderByCreatedAtDesc(
+                filter.getPostType(), PostVisibility.PUBLIC, pageable);
+        } else {
+            // 모든 공개 게시글 조회
+            postPage = postRepository.findByVisibilityOrderByCreatedAtDesc(
+                PostVisibility.PUBLIC, pageable);
+        }
+        
+        List<PostDto.Response> posts = postPage.getContent().stream()
+            .map(this::convertToResponse)
+            .collect(Collectors.toList());
+        
+        return PostDto.ListResponse.builder()
+            .posts(posts)
+            .totalCount((int) postPage.getTotalElements())
+            .currentPage(filter.getPage())
+            .totalPages(postPage.getTotalPages())
+            .build();
+    }
+    
+    /**
+     * 특정 사용자의 공개 게시글 조회
+     */
+    public PostDto.ListResponse getUserPublicPosts(Long userId, PostDto.SearchFilter filter) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        
+        Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize());
+        Page<Post> postPage;
+        
+        if (filter.getPostType() != null) {
+            // 타입별 공개 게시글 조회
+            postPage = postRepository.findByUserAndPostTypeAndVisibilityOrderByCreatedAtDesc(
+                user, filter.getPostType(), PostVisibility.PUBLIC, pageable);
+        } else {
+            // 모든 공개 게시글 조회
+            postPage = postRepository.findByUserAndVisibilityOrderByCreatedAtDesc(
+                user, PostVisibility.PUBLIC, pageable);
+        }
+        
+        List<PostDto.Response> posts = postPage.getContent().stream()
+            .map(this::convertToResponse)
+            .collect(Collectors.toList());
+        
+        return PostDto.ListResponse.builder()
+            .posts(posts)
+            .totalCount((int) postPage.getTotalElements())
+            .currentPage(filter.getPage())
+            .totalPages(postPage.getTotalPages())
+            .build();
+    }
+    
+    /**
+     * 통합 게시글 목록 조회 (다른 사람들의 공개 게시글 + 나의 모든 게시글)
+     */
+    public PostDto.ListResponse getAllPosts(Long userId, PostDto.SearchFilter filter) {
+        Pageable pageable = PageRequest.of(filter.getPage(), filter.getSize());
+        Page<Post> postPage;
+        
+        if (filter.getPostType() != null) {
+            // 타입별 통합 게시글 조회
+            postPage = postRepository.findByPostTypeAndVisibilityOrUserOrderByCreatedAtDesc(
+                filter.getPostType(), userId, pageable);
+        } else {
+            // 모든 통합 게시글 조회
+            postPage = postRepository.findByVisibilityOrUserOrderByCreatedAtDesc(
+                userId, pageable);
+        }
+        
+        List<PostDto.Response> posts = postPage.getContent().stream()
+            .map(this::convertToResponse)
+            .collect(Collectors.toList());
+        
+        return PostDto.ListResponse.builder()
+            .posts(posts)
+            .totalCount((int) postPage.getTotalElements())
+            .currentPage(filter.getPage())
+            .totalPages(postPage.getTotalPages())
+            .build();
+    }
+    
+    /**
      * 게시글 상세 조회
      */
     public PostDto.Response getPost(Long postId) {

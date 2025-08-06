@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -94,4 +95,28 @@ public interface PostRepository extends JpaRepository<Post, Long> {
            "ORDER BY p.createdAt DESC")
     Page<Post> findByKeywordInTitleOrContentOrBookTitle(
         @Param("keyword") String keyword, Pageable pageable);
+    
+    // 통합 게시글 조회 (다른 사람들의 공개 게시글 + 나의 모든 게시글)
+    @Query("SELECT p FROM Post p WHERE " +
+           "(p.visibility = 'PUBLIC' OR p.user.id = :userId) " +
+           "ORDER BY p.createdAt DESC")
+    Page<Post> findByVisibilityOrUserOrderByCreatedAtDesc(
+        @Param("userId") Long userId, Pageable pageable);
+    
+    // 타입별 통합 게시글 조회
+    @Query("SELECT p FROM Post p WHERE " +
+           "p.postType = :postType AND " +
+           "(p.visibility = 'PUBLIC' OR p.user.id = :userId) " +
+           "ORDER BY p.createdAt DESC")
+    Page<Post> findByPostTypeAndVisibilityOrUserOrderByCreatedAtDesc(
+        @Param("postType") PostType postType,
+        @Param("userId") Long userId, 
+        Pageable pageable);
+    
+    // 특정 사용자의 특정 기간 게시글 개수 조회
+    long countByUserAndCreatedAtBetween(User user, LocalDateTime start, LocalDateTime end);
+    
+    // 특정 사용자의 타입별 공개 게시글 조회
+    Page<Post> findByUserAndPostTypeAndVisibilityOrderByCreatedAtDesc(
+        User user, PostType postType, PostVisibility visibility, Pageable pageable);
 }

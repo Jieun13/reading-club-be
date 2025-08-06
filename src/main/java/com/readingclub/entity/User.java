@@ -55,6 +55,10 @@ public class User {
     @Builder.Default
     private List<CurrentlyReading> currentlyReading = new ArrayList<>();
     
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Comment> comments = new ArrayList<>();
+    
     // 편의 메서드
     public void addBook(Book book) {
         books.add(book);
