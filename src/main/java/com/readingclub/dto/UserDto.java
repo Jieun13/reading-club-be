@@ -55,5 +55,7 @@ public class UserDto {
         private Double averageRating;
         private Long booksThisMonth;
         private Long booksThisYear;
+        private Long droppedBooksCount; // 총 읽다 만 책 권수
+        private Long thisMonthDroppedBooks; // 이번 달 읽다 만 책 권수
     }
 }

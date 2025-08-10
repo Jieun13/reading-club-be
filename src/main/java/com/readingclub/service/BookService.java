@@ -2,13 +2,19 @@ package com.readingclub.service;
 
 import com.readingclub.dto.BookDto;
 import com.readingclub.dto.CurrentlyReadingDto;
+import com.readingclub.dto.DroppedBookDto;
+import com.readingclub.dto.WishlistDto;
 import com.readingclub.dto.UserDto;
 import com.readingclub.entity.Book;
 import com.readingclub.entity.CurrentlyReading;
+import com.readingclub.entity.DroppedBook;
 import com.readingclub.entity.User;
+import com.readingclub.entity.Wishlist;
 import com.readingclub.repository.BookRepository;
 import com.readingclub.repository.CurrentlyReadingRepository;
+import com.readingclub.repository.DroppedBookRepository;
 import com.readingclub.repository.UserRepository;
+import com.readingclub.repository.WishlistRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -27,6 +33,8 @@ public class BookService {
     
     private final BookRepository bookRepository;
     private final CurrentlyReadingRepository currentlyReadingRepository;
+    private final DroppedBookRepository droppedBookRepository;
+    private final WishlistRepository wishlistRepository;
     private final UserRepository userRepository;
     
     /**
@@ -71,6 +79,8 @@ public class BookService {
                 .totalCurrentlyReading(currentlyReadingResponses.size())
                 .build();
     }
+    
+
     
     /**
      * 책 상세 조회
@@ -256,4 +266,113 @@ public class BookService {
                 .user(userDto)
                 .build();
     }
+    
+    /**
+     * 사용자별 모든 책 상태 조회 (완독 + 읽고 있는 책 + 읽다 만 책 + 읽고 싶은 책)
+     */
+    public BookDto.AllBooksResponse getAllUserBooks(Long userId, Pageable pageable, 
+                                                  Integer year, Integer month, Integer rating, String search) {
+        // 사용자 존재 확인
+        if (!userRepository.existsById(userId)) {
+            throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
+        }
+        
+        // 완독한 책 조회 (페이징)
+        Page<Book> finishedBooks = bookRepository.findByUserIdOrderByFinishedDateDesc(userId, pageable);
+        Page<BookDto.Response> finishedBookResponses = finishedBooks.map(this::convertToDto);
+        
+        // 읽고 있는 책 조회 (페이징 없이 전체)
+        List<CurrentlyReading> currentlyReading = currentlyReadingRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        List<CurrentlyReadingDto.Response> currentlyReadingResponses = currentlyReading.stream()
+                .map(this::convertCurrentlyReadingToDto)
+                .collect(Collectors.toList());
+        
+        // 읽다 만 책 조회 (페이징 없이 전체)
+        List<DroppedBook> droppedBooks = droppedBookRepository.findByUserIdOrderByDroppedDateDesc(userId);
+        List<DroppedBookDto.Response> droppedBookResponses = droppedBooks.stream()
+                .map(this::convertDroppedBookToDto)
+                .collect(Collectors.toList());
+        
+        // 읽고 싶은 책 조회 (페이징 없이 전체)
+        List<Wishlist> wishlistBooks = wishlistRepository.findByUserIdOrderByPriorityAscCreatedAtDesc(userId);
+        List<WishlistDto.Response> wishlistBookResponses = wishlistBooks.stream()
+                .map(this::convertWishlistToDto)
+                .collect(Collectors.toList());
+        
+        return BookDto.AllBooksResponse.builder()
+                .finishedBooks(finishedBookResponses)
+                .currentlyReading(currentlyReadingResponses)
+                .droppedBooks(droppedBookResponses)
+                .wishlistBooks(wishlistBookResponses)
+                .totalFinishedBooks((int) finishedBooks.getTotalElements())
+                .totalCurrentlyReading(currentlyReadingResponses.size())
+                .totalDroppedBooks(droppedBookResponses.size())
+                .totalWishlistBooks(wishlistBookResponses.size())
+                .build();
+    }
+    
+    /**
+     * DroppedBook Entity를 DTO로 변환
+     */
+    private DroppedBookDto.Response convertDroppedBookToDto(DroppedBook droppedBook) {
+        UserDto.Response userDto = UserDto.Response.builder()
+                .id(droppedBook.getUser().getId())
+                .kakaoId(droppedBook.getUser().getKakaoId())
+                .nickname(droppedBook.getUser().getNickname())
+                .profileImage(droppedBook.getUser().getProfileImage())
+                .createdAt(droppedBook.getUser().getCreatedAt())
+                .updatedAt(droppedBook.getUser().getUpdatedAt())
+                .build();
+        
+        return DroppedBookDto.Response.builder()
+                .id(droppedBook.getId())
+                .title(droppedBook.getTitle())
+                .author(droppedBook.getAuthor())
+                .isbn(droppedBook.getIsbn())
+                .coverImage(droppedBook.getCoverImage())
+                .publisher(droppedBook.getPublisher())
+                .publishedDate(droppedBook.getPublishedDate())
+                .description(droppedBook.getDescription())
+                .readingType(droppedBook.getReadingType())
+                .readingTypeDisplay(droppedBook.getReadingType().getDisplayName())
+                .progressPercentage(droppedBook.getProgressPercentage())
+                .dropReason(droppedBook.getDropReason())
+                .startedDate(droppedBook.getStartedDate())
+                .droppedDate(droppedBook.getDroppedDate())
+                .memo(droppedBook.getMemo())
+                .createdAt(droppedBook.getCreatedAt())
+                .updatedAt(droppedBook.getUpdatedAt())
+                .user(userDto)
+                .build();
+    }
+    
+    /**
+     * Wishlist Entity를 DTO로 변환
+     */
+    private WishlistDto.Response convertWishlistToDto(Wishlist wishlist) {
+        UserDto.Response userDto = UserDto.Response.builder()
+                .id(wishlist.getUser().getId())
+                .kakaoId(wishlist.getUser().getKakaoId())
+                .nickname(wishlist.getUser().getNickname())
+                .profileImage(wishlist.getUser().getProfileImage())
+                .createdAt(wishlist.getUser().getCreatedAt())
+                .updatedAt(wishlist.getUser().getUpdatedAt())
+                .build();
+        
+        return WishlistDto.Response.builder()
+                .id(wishlist.getId())
+                .title(wishlist.getTitle())
+                .author(wishlist.getAuthor())
+                .coverImage(wishlist.getCoverImage())
+                .publisher(wishlist.getPublisher())
+                .publishedDate(wishlist.getPublishedDate())
+                .description(wishlist.getDescription())
+                .priority(wishlist.getPriority())
+                .memo(wishlist.getMemo())
+                .createdAt(wishlist.getCreatedAt())
+                .updatedAt(wishlist.getUpdatedAt())
+                .user(userDto)
+                .build();
+    }
+    
 }

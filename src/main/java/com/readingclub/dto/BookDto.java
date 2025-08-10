@@ -154,4 +154,22 @@ public class BookDto {
         private List<CurrentlyReadingDto.Response> currentlyReading;
         private int totalCurrentlyReading;
     }
+    
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AllBooksResponse {
+        private Page<Response> finishedBooks; // 완독한 책
+        private List<CurrentlyReadingDto.Response> currentlyReading; // 읽고 있는 책
+        private List<DroppedBookDto.Response> droppedBooks; // 읽다 만 책
+        private List<WishlistDto.Response> wishlistBooks; // 읽고 싶은 책
+        
+        private int totalFinishedBooks;
+        private int totalCurrentlyReading;
+        private int totalDroppedBooks;
+        private int totalWishlistBooks;
+    }
+    
+
 }

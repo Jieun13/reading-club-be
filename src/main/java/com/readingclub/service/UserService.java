@@ -13,6 +13,7 @@ import com.readingclub.repository.UserRepository;
 import com.readingclub.repository.PostRepository;
 import com.readingclub.repository.CurrentlyReadingRepository;
 import com.readingclub.repository.WishlistRepository;
+import com.readingclub.repository.DroppedBookRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ public class UserService {
     private final PostRepository postRepository;
     private final CurrentlyReadingRepository currentlyReadingRepository;
     private final WishlistRepository wishlistRepository;
+    private final DroppedBookRepository droppedBookRepository;
     
     /**
      * 사용자 ID로 조회
@@ -140,11 +142,18 @@ public class UserService {
         long booksThisYear = bookRepository.findByUserIdAndFinishedDateBetween(
                 userId, thisYearStart, thisYearEnd).size();
         
+        // 읽다 만 책 통계
+        long droppedBooksCount = droppedBookRepository.countByUserId(userId);
+        long thisMonthDroppedBooks = droppedBookRepository.countByUserIdAndDroppedDateBetween(
+                userId, thisMonthStart, thisMonthEnd);
+        
         return UserDto.Statistics.builder()
                 .totalBooks(totalBooks)
                 .averageRating(Math.round(averageRating * 10) / 10.0) // 소수점 첫째자리까지
                 .booksThisMonth(booksThisMonth)
                 .booksThisYear(booksThisYear)
+                .droppedBooksCount(droppedBooksCount)
+                .thisMonthDroppedBooks(thisMonthDroppedBooks)
                 .build();
     }
     
@@ -196,6 +205,9 @@ public class UserService {
         // 읽고 싶은 책 권수
         long wishlistCount = wishlistRepository.countByUserId(userId);
         
+        // 읽다 만 책 권수
+        long droppedBooksCount = droppedBookRepository.countByUserId(userId);
+        
         // 총 게시글 개수
         long totalPosts = postRepository.countByUser(userRepository.findById(userId).orElse(null));
         
@@ -210,13 +222,18 @@ public class UserService {
         LocalDate endOfMonthDate = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth());
         long thisMonthBooks = bookRepository.countByUserIdAndFinishedDateBetween(userId, startOfMonthDate, endOfMonthDate);
         
+        // 이번 달 읽다 만 책 권수
+        long thisMonthDroppedBooks = droppedBookRepository.countByUserIdAndDroppedDateBetween(userId, startOfMonthDate, endOfMonthDate);
+        
         return UserProfileDto.UserStatistics.builder()
                 .totalBooks(totalBooks)
                 .currentlyReadingCount(currentlyReadingCount)
                 .wishlistCount(wishlistCount)
+                .droppedBooksCount(droppedBooksCount)
                 .totalPosts(totalPosts)
                 .thisMonthPosts(thisMonthPosts)
                 .thisMonthBooks(thisMonthBooks)
+                .thisMonthDroppedBooks(thisMonthDroppedBooks)
                 .build();
     }
     
