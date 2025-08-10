@@ -56,14 +56,13 @@ public class BookController {
     @GetMapping("/with-currently-reading")
     public ResponseEntity<ApiResponse<BookDto.CombinedBookResponse>> getMyBooksWithCurrentlyReading(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer rating,
             @RequestParam(required = false) String search) {
         try {
             Long userId = getCurrentUserId();
-            Pageable pageable = PageRequest.of(page, size);
+            Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE); // 페이징 없이 전체 조회
             
             BookDto.CombinedBookResponse response = bookService.getUserBooksWithCurrentlyReading(userId, pageable, year, month, rating, search);
             return ResponseEntity.ok(ApiResponse.success(response, "책 목록 조회 성공"));
@@ -73,6 +72,8 @@ public class BookController {
                     .body(ApiResponse.error("책 목록 조회에 실패했습니다."));
         }
     }
+    
+
     
     /**
      * 책 상세 조회
@@ -194,6 +195,30 @@ public class BookController {
             log.error("월별 통계 조회 실패", e);
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("월별 통계 조회에 실패했습니다."));
+        }
+    }
+    
+    /**
+     * 내 모든 책 상태 조회 (완독 + 읽고 있는 책 + 읽다 만 책 + 읽고 싶은 책)
+     */
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<BookDto.AllBooksResponse>> getAllMyBooks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer rating,
+            @RequestParam(required = false) String search) {
+        try {
+            Long userId = getCurrentUserId();
+            Pageable pageable = PageRequest.of(page, size);
+            
+            BookDto.AllBooksResponse response = bookService.getAllUserBooks(userId, pageable, year, month, rating, search);
+            return ResponseEntity.ok(ApiResponse.success(response, "모든 책 상태 조회 성공"));
+        } catch (Exception e) {
+            log.error("모든 책 상태 조회 실패", e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("모든 책 상태 조회에 실패했습니다."));
         }
     }
     

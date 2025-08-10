@@ -44,8 +44,10 @@ public class UserProfileDto {
         private Long totalBooks; // 총 완독한 책 권수
         private Long currentlyReadingCount; // 읽고 있는 책 권수
         private Long wishlistCount; // 읽고 싶은 책 권수
+        private Long droppedBooksCount; // 총 읽다 만 책 권수
         private Long totalPosts; // 총 게시글 개수
         private Long thisMonthPosts; // 이번 달 게시글 개수
         private Long thisMonthBooks; // 이번 달 완독한 책 권수
+        private Long thisMonthDroppedBooks; // 이번 달 읽다 만 책 권수
     }
 } 
