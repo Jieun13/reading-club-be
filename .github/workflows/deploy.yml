@@ -42,7 +42,18 @@ jobs:
           script: |
             set -e
 
-            ls -l /home/ec2-user/app/app.jar
+            # app.jar가 파일인지 디렉토리인지 확인하고 있으면 삭제
+            if [ -d /home/ec2-user/app/app.jar ]; then
+              echo "app.jar is a directory, removing..."
+              rm -rf /home/ec2-user/app/app.jar
+            elif [ -f /home/ec2-user/app/app.jar ]; then
+              echo "app.jar is a file, removing..."
+              rm -f /home/ec2-user/app/app.jar
+            else
+              echo "app.jar does not exist, no need to remove"
+            fi
+
+            ls -l /home/ec2-user/app/
   
             # GitHub Secrets에서 환경변수 파일 생성
             sudo bash -c 'cat > /etc/myapp.env <<EOF
