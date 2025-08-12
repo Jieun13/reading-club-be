@@ -22,6 +22,9 @@ jobs:
       - name: Build (Gradle)
         run: ./gradlew clean bootJar -x test
 
+      - name: List build artifacts
+        run: ls -la build/libs/
+
       - name: Upload JAR to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -29,8 +32,8 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
-          source: build/libs/reading-club-be-0.0.1-SNAPSHOT.jar
-          target: /home/ec2-user/app/app.jar
+          source: build/libs/*.jar
+          target: /home/ec2-user/app/
 
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v0.1.9
@@ -42,18 +45,28 @@ jobs:
           script: |
             set -e
 
-            # app.jar가 파일인지 디렉토리인지 확인하고 있으면 삭제
-            if [ -d /home/ec2-user/app/app.jar ]; then
-              echo "app.jar is a directory, removing..."
-              rm -rf /home/ec2-user/app/app.jar
-            elif [ -f /home/ec2-user/app/app.jar ]; then
-              echo "app.jar is a file, removing..."
-              rm -f /home/ec2-user/app/app.jar
+            # 디렉토리 준비
+            mkdir -p /home/ec2-user/app
+            chown ec2-user:ec2-user /home/ec2-user/app
+
+            # 업로드된 JAR 파일 확인
+            echo "=== 업로드된 파일 목록 ==="
+            ls -la /home/ec2-user/app/
+
+            # 최신 JAR를 app.jar로 복사
+            LATEST_JAR=$(ls -t /home/ec2-user/app/*.jar | head -n1)
+            if [ -n "$LATEST_JAR" ]; then
+              echo "최신 JAR 파일: $LATEST_JAR"
+              cp "$LATEST_JAR" /home/ec2-user/app/app.jar
+              chown ec2-user:ec2-user /home/ec2-user/app/app.jar
+              echo "app.jar로 복사 완료"
             else
-              echo "app.jar does not exist, no need to remove"
+              echo "ERROR: JAR 파일을 찾을 수 없습니다!"
+              exit 1
             fi
 
-            ls -l /home/ec2-user/app/
+            echo "=== 최종 파일 목록 ==="
+            ls -la /home/ec2-user/app/
   
             # GitHub Secrets에서 환경변수 파일 생성
             sudo bash -c 'cat > /etc/myapp.env <<EOF
