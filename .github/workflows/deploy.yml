@@ -30,7 +30,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           source: build/libs/reading-club-be-0.0.1-SNAPSHOT.jar
-          target: /home/ec2-user/reading-club-be/build/libs/
+          target: /home/ec2-user/app/app.jar
 
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v0.1.9
@@ -42,14 +42,7 @@ jobs:
           script: |
             set -e
 
-            # 디렉토리 준비
-            mkdir -p /home/ec2-user/app
-            chown ec2-user:ec2-user /home/ec2-user/app
-
-            # 최신 JAR를 app.jar로 복사
-            LATEST_JAR=$(ls -t /home/ec2-user/reading-club-be/build/libs/*.jar | head -n1)
-            sudo cp "$LATEST_JAR" /home/ec2-user/app/app.jar
-            sudo chown ec2-user:ec2-user /home/ec2-user/app/app.jar
+            ls -l /home/ec2-user/app/app.jar
   
             # GitHub Secrets에서 환경변수 파일 생성
             sudo bash -c 'cat > /etc/myapp.env <<EOF
