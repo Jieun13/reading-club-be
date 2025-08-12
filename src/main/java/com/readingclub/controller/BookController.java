@@ -223,6 +223,22 @@ public class BookController {
     }
     
     /**
+     * 이번 달에 등록한 책들의 표지 URL 목록 조회
+     */
+    @GetMapping("/monthly-covers")
+    public ResponseEntity<ApiResponse<BookDto.MonthlyBookCoversResponse>> getMonthlyBookCovers() {
+        try {
+            Long userId = getCurrentUserId();
+            BookDto.MonthlyBookCoversResponse response = bookService.getMonthlyBookCovers(userId);
+            return ResponseEntity.ok(ApiResponse.success(response, "이번 달 책 표지 URL 조회 성공"));
+        } catch (Exception e) {
+            log.error("이번 달 책 표지 URL 조회 실패", e);
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("이번 달 책 표지 URL 조회에 실패했습니다."));
+        }
+    }
+    
+    /**
      * SecurityContext에서 현재 사용자 ID 추출
      */
     private Long getCurrentUserId() {

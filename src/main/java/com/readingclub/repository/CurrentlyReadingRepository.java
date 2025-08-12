@@ -40,4 +40,8 @@ public interface CurrentlyReadingRepository extends JpaRepository<CurrentlyReadi
     
     // 특정 읽고 있는 책 조회
     Optional<CurrentlyReading> findByIdAndUserId(Long id, Long userId);
+    
+    // 이번 달에 등록한 읽고 있는 책들 조회
+    @Query("SELECT cr FROM CurrentlyReading cr WHERE cr.user.id = :userId AND YEAR(cr.createdAt) = :year AND MONTH(cr.createdAt) = :month ORDER BY cr.createdAt DESC")
+    List<CurrentlyReading> findByUserIdAndCreatedAtYearAndCreatedAtMonth(@Param("userId") Long userId, @Param("year") int year, @Param("month") int month);
 } 

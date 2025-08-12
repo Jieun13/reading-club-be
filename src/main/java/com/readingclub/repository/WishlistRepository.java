@@ -62,4 +62,10 @@ public interface WishlistRepository extends JpaRepository<Wishlist, Long> {
      * 사용자와 위시리스트 ID로 조회 (권한 확인용)
      */
     Optional<Wishlist> findByIdAndUserId(Long wishlistId, Long userId);
+    
+    /**
+     * 이번 달에 등록한 위시리스트 책들 조회
+     */
+    @Query("SELECT w FROM Wishlist w WHERE w.user.id = :userId AND YEAR(w.createdAt) = :year AND MONTH(w.createdAt) = :month ORDER BY w.priority ASC, w.createdAt DESC")
+    List<Wishlist> findByUserIdAndCreatedAtYearAndCreatedAtMonth(@Param("userId") Long userId, @Param("year") int year, @Param("month") int month);
 }
