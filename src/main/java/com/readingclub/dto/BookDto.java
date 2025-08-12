@@ -171,5 +171,19 @@ public class BookDto {
         private int totalWishlistBooks;
     }
     
+    /**
+     * 이번 달 등록한 책들의 표지 URL 목록
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MonthlyBookCoversResponse {
+        private List<String> completedBookCovers;      // 완독한 책 표지 URL
+        private List<String> currentlyReadingCovers;  // 읽고 있는 책 표지 URL
+        private List<String> droppedBookCovers;       // 읽다 만 책 표지 URL
+        private List<String> wishlistCovers;          // 위시리스트 책 표지 URL
+        private int totalCount;                       // 전체 책 개수
+    }
 
 }

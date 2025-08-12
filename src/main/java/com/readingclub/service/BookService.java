@@ -375,4 +375,62 @@ public class BookService {
                 .build();
     }
     
+    /**
+     * 이번 달에 등록한 책들의 표지 URL 목록 조회
+     */
+    public BookDto.MonthlyBookCoversResponse getMonthlyBookCovers(Long userId) {
+        // 사용자 존재 확인
+        if (!userRepository.existsById(userId)) {
+            throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
+        }
+        
+        // 현재 년월 계산
+        java.time.YearMonth currentYearMonth = java.time.YearMonth.now();
+        int currentYear = currentYearMonth.getYear();
+        int currentMonth = currentYearMonth.getMonthValue();
+        
+        // 이번 달에 등록한 완독한 책들의 표지 URL
+        List<String> completedBookCovers = bookRepository
+                .findByUserIdAndYearAndMonth(userId, currentYear, currentMonth)
+                .stream()
+                .map(Book::getCoverImage)
+                .filter(coverImage -> coverImage != null && !coverImage.trim().isEmpty())
+                .collect(Collectors.toList());
+        
+        // 이번 달에 등록한 읽고 있는 책들의 표지 URL
+        List<String> currentlyReadingCovers = currentlyReadingRepository
+                .findByUserIdAndCreatedAtYearAndCreatedAtMonth(userId, currentYear, currentMonth)
+                .stream()
+                .map(CurrentlyReading::getCoverImage)
+                .filter(coverImage -> coverImage != null && !coverImage.trim().isEmpty())
+                .collect(Collectors.toList());
+        
+        // 이번 달에 등록한 읽다 만 책들의 표지 URL
+        List<String> droppedBookCovers = droppedBookRepository
+                .findByUserIdAndYearAndMonth(userId, currentYear, currentMonth)
+                .stream()
+                .map(DroppedBook::getCoverImage)
+                .filter(coverImage -> coverImage != null && !coverImage.trim().isEmpty())
+                .collect(Collectors.toList());
+        
+        // 이번 달에 등록한 위시리스트 책들의 표지 URL
+        List<String> wishlistCovers = wishlistRepository
+                .findByUserIdAndCreatedAtYearAndCreatedAtMonth(userId, currentYear, currentMonth)
+                .stream()
+                .map(Wishlist::getCoverImage)
+                .filter(coverImage -> coverImage != null && !coverImage.trim().isEmpty())
+                .collect(Collectors.toList());
+        
+        int totalCount = completedBookCovers.size() + currentlyReadingCovers.size() + 
+                        droppedBookCovers.size() + wishlistCovers.size();
+        
+        return BookDto.MonthlyBookCoversResponse.builder()
+                .completedBookCovers(completedBookCovers)
+                .currentlyReadingCovers(currentlyReadingCovers)
+                .droppedBookCovers(droppedBookCovers)
+                .wishlistCovers(wishlistCovers)
+                .totalCount(totalCount)
+                .build();
+    }
+    
 }
