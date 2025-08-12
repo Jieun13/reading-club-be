@@ -53,24 +53,24 @@ jobs:
 
             # GitHub Secrets에서 환경변수 파일 생성
             sudo bash -c 'cat > /etc/myapp.env <<EOF
-  ALADIN_API_TTB_KEY=${{ secrets.ALADIN_API_TTB_KEY }}
-  CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }}
-  DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-  DB_URL=${{ secrets.DB_URL }}
-  DB_USERNAME=${{ secrets.DB_USERNAME }}
-  JWT_ACCESS_EXPIRATION=${{ secrets.JWT_ACCESS_EXPIRATION }}
-  JWT_REFRESH_EXPIRATION=${{ secrets.JWT_REFRESH_EXPIRATION }}
-  JWT_SECRET=${{ secrets.JWT_SECRET }}
-  KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
-  KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
-  KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI }}
-  SERVER_PORT=${{ secrets.SERVER_PORT }}
-  EOF'
-  
-  sudo chown root:root /etc/myapp.env
-  sudo chmod 600 /etc/myapp.env
-  
-  # systemd 재로드 및 재시작
-  sudo systemctl daemon-reload
-  sudo systemctl restart myapp
-  sudo systemctl status myapp --no-pager
+            ALADIN_API_TTB_KEY=${{ secrets.ALADIN_API_TTB_KEY }}
+            CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_URL=${{ secrets.DB_URL }}
+            DB_USERNAME=${{ secrets.DB_USERNAME }}
+            JWT_ACCESS_EXPIRATION=${{ secrets.JWT_ACCESS_EXPIRATION }}
+            JWT_REFRESH_EXPIRATION=${{ secrets.JWT_REFRESH_EXPIRATION }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
+            KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
+            KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI }}
+            SERVER_PORT=${{ secrets.SERVER_PORT }}
+            EOF'
+
+            sudo chown root:root /etc/myapp.env
+            sudo chmod 600 /etc/myapp.env
+            
+            # systemd 재로드 및 재시작
+            sudo systemctl daemon-reload
+            sudo systemctl restart myapp
+            sudo systemctl status myapp --no-pager
